@@ -36,9 +36,11 @@ class MusicViewModel : ViewModel() {
 
     private var controller: MediaController? = null
     private var controllerFuture: ListenableFuture<MediaController>? = null
+    private var appContext: Context? = null
 
     // ── Initialise ────────────────────────────────────────────────────────────
     fun init(context: Context) {
+        appContext = context.applicationContext
         val sessionToken = SessionToken(
             context,
             ComponentName(context, MusicPlaybackService::class.java)
@@ -85,12 +87,39 @@ class MusicViewModel : ViewModel() {
     }
 
     fun togglePlayPause() {
+        val ext = activeExternalController()
+        if (ext != null) {
+            val state = ext.playbackState?.state
+            if (state == android.media.session.PlaybackState.STATE_PLAYING) ext.transportControls.pause()
+            else ext.transportControls.play()
+            return
+        }
         val ctrl = controller ?: return
         if (ctrl.isPlaying) ctrl.pause() else ctrl.play()
     }
 
-    fun skipNext() { controller?.seekToNextMediaItem() }
-    fun skipPrev() { controller?.seekToPreviousMediaItem() }
+    fun skipNext() {
+        val ext = activeExternalController()
+        if (ext != null) { ext.transportControls.skipToNext(); return }
+        controller?.seekToNextMediaItem()
+    }
+
+    fun skipPrev() {
+        val ext = activeExternalController()
+        if (ext != null) { ext.transportControls.skipToPrevious(); return }
+        controller?.seekToPreviousMediaItem()
+    }
+
+    private fun activeExternalController(): android.media.session.MediaController? {
+        val ctx = appContext ?: return null
+        return try {
+            val mgr = ctx.getSystemService(Context.MEDIA_SESSION_SERVICE) as android.media.session.MediaSessionManager
+            val comp = ComponentName(ctx, DotNotificationListenerService::class.java)
+            mgr.getActiveSessions(comp).firstOrNull()
+        } catch (_: SecurityException) {
+            null
+        }
+    }
 
     fun seekTo(fraction: Float) {
         val dur = _uiState.value.durationMs

@@ -40,5 +40,15 @@
             </intent-filter>
         </service>
 
+        <!-- System MediaSession Listener (controls Spotify, YT Music, etc.) -->
+        <service
+            android:name=".media.DotNotificationListenerService"
+            android:exported="true"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
     </application>
 </manifest>
