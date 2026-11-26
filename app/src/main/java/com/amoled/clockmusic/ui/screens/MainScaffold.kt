@@ -30,14 +30,28 @@ enum class AppScreen { CLOCK, TIMER, MUSIC, STATS }
 fun MainScaffold(
     isTablet: Boolean,
     musicViewModel: MusicViewModel,
+    currentTheme: AppTheme = AppTheme.FUSION,
+    onCycleTheme: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var currentScreen by remember { mutableStateOf(AppScreen.CLOCK) }
 
-    if (isTablet) {
-        TabletScaffold(currentScreen, { currentScreen = it }, musicViewModel, modifier)
-    } else {
-        PhoneScaffold(currentScreen, { currentScreen = it }, musicViewModel, modifier)
+    Box(modifier = modifier.fillMaxSize()) {
+        if (isTablet) {
+            TabletScaffold(currentScreen, { currentScreen = it }, musicViewModel, Modifier.fillMaxSize())
+        } else {
+            PhoneScaffold(currentScreen, { currentScreen = it }, musicViewModel, Modifier.fillMaxSize())
+        }
+
+        // Top-right theme switcher pill
+        NothingBadge(
+            text = currentTheme.name,
+            active = false,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 12.dp, end = 16.dp)
+                .clickable { onCycleTheme() }
+        )
     }
 }
 

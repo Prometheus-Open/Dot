@@ -331,29 +331,31 @@ private fun MusicProgressBar(
     modifier: Modifier
 ) {
     Column(modifier = modifier) {
-        // Nothing-style glyph dot strip instead of generic slider track
-        Box(modifier = Modifier.fillMaxWidth().height(14.dp)) {
+        // Nothing-style glyph dot strip + aligned invisible drag slider
+        Box(
+            modifier = Modifier.fillMaxWidth().height(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
             GlyphStrip(
                 progress = progress,
                 color    = NothingRed,
                 dimColor = NothingRim,
                 dotCount = 60,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth().height(12.dp)
+            )
+            Slider(
+                value         = progress,
+                onValueChange = onSeek,
+                colors        = SliderDefaults.colors(
+                    thumbColor         = NothingRed,
+                    activeTrackColor   = Color.Transparent,
+                    inactiveTrackColor = Color.Transparent
+                ),
+                modifier = Modifier.fillMaxWidth()
             )
         }
-        // Invisible drag slider on top
-        Slider(
-            value         = progress,
-            onValueChange = onSeek,
-            colors        = SliderDefaults.colors(
-                thumbColor         = NothingRed,
-                activeTrackColor   = Color.Transparent,
-                inactiveTrackColor = Color.Transparent
-            ),
-            modifier = Modifier.fillMaxWidth().offset(y = (-14).dp).height(28.dp)
-        )
         Row(
-            modifier              = Modifier.fillMaxWidth().offset(y = (-8).dp),
+            modifier              = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(formatMs(posMs), style = MaterialTheme.typography.labelSmall,

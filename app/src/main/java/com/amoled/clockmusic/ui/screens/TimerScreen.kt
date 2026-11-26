@@ -1,5 +1,7 @@
 package com.amoled.clockmusic.ui.screens
 
+import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -12,8 +14,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowDown
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
+import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Stop
+import androidx.compose.material.icons.rounded.Visibility
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +31,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -58,6 +63,21 @@ fun TimerScreen(
     var totalSeconds by remember { mutableStateOf(PRESETS[0].minutes * 60) }
     var remainingSeconds by remember { mutableStateOf(PRESETS[0].minutes * 60) }
     var isRunning by remember { mutableStateOf(false) }
+    var keepScreenOn by remember { mutableStateOf(true) }
+    var strictMode by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    DisposableEffect(keepScreenOn, isRunning) {
+        val window = (context as? Activity)?.window
+        if (keepScreenOn && isRunning) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     LaunchedEffect(isRunning, remainingSeconds) {
         if (isRunning && remainingSeconds > 0) {
@@ -101,6 +121,20 @@ fun TimerScreen(
                         dimColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.06f),
                         modifier = Modifier.fillMaxWidth(0.85f).height(140.dp)
                     )
+                    Spacer(Modifier.height(20.dp))
+                    // Distraction-reducing toggles
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        NothingBadge(
+                            text = if (keepScreenOn) "SCREEN ON" else "AUTO SLEEP",
+                            active = keepScreenOn,
+                            modifier = Modifier.clickable { keepScreenOn = !keepScreenOn }
+                        )
+                        NothingBadge(
+                            text = if (strictMode) "STRICT LOCK" else "NORMAL",
+                            active = strictMode,
+                            modifier = Modifier.clickable { if (!isRunning) strictMode = !strictMode }
+                        )
+                    }
                 }
             }
 
@@ -170,7 +204,7 @@ fun TimerScreen(
                 // Slide to Start / Stop
                 SlideToStartBar(
                     isRunning = isRunning,
-                    onToggle = { isRunning = !isRunning },
+                    onToggle = { if (!(isRunning && strictMode)) isRunning = !isRunning },
                     modifier = Modifier.fillMaxWidth().height(64.dp)
                 )
             }

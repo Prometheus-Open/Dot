@@ -28,19 +28,28 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            // ── Theme selection ───────────────────────────────────────────────
-            // AppTheme.FUSION  = Blockit warm brown layout + Nothing Red + dot matrix
-            // AppTheme.NOTHING = Pure black + red (full Nothing OS)
-            // AppTheme.BLOCKIT = Original warm terracotta Blockit palette
-            ClockMusicTheme(appTheme = AppTheme.FUSION) {
-                AppRoot()
+            var currentTheme by remember { mutableStateOf(AppTheme.FUSION) }
+            ClockMusicTheme(appTheme = currentTheme) {
+                AppRoot(
+                    currentTheme = currentTheme,
+                    onCycleTheme = {
+                        currentTheme = when (currentTheme) {
+                            AppTheme.FUSION -> AppTheme.NOTHING
+                            AppTheme.NOTHING -> AppTheme.BLOCKIT
+                            AppTheme.BLOCKIT -> AppTheme.FUSION
+                        }
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-private fun AppRoot() {
+private fun AppRoot(
+    currentTheme: AppTheme,
+    onCycleTheme: () -> Unit
+) {
     val context    = LocalContext.current
     val activity   = context as ComponentActivity
     val musicVm: MusicViewModel = viewModel()
@@ -84,6 +93,8 @@ private fun AppRoot() {
         MainScaffold(
             isTablet       = isTablet,
             musicViewModel = musicVm,
+            currentTheme   = currentTheme,
+            onCycleTheme   = onCycleTheme,
             modifier       = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
