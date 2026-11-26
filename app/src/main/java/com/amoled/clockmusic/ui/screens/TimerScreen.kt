@@ -29,10 +29,12 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -300,11 +302,14 @@ private fun VerticalTickRuler(
     onMinutesChange: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val haptic = LocalHapticFeedback.current
+    var dragAccumulator by remember { mutableStateOf(0f) }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Tick ruler box
+        // Rotary/scrollable tick wheel (matches Blockit screenshot)
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -313,10 +318,21 @@ private fun VerticalTickRuler(
                 .background(SurfaceBrown)
                 .border(1.dp, RimBrown, RoundedCornerShape(18.dp))
                 .pointerInput(minutes) {
-                    detectVerticalDragGestures { _, dragAmount ->
-                        if (dragAmount < -8f) onMinutesChange(minutes + 1)
-                        else if (dragAmount > 8f) onMinutesChange(minutes - 1)
-                    }
+                    detectVerticalDragGestures(
+                        onDragEnd = { dragAccumulator = 0f },
+                        onVerticalDrag = { _, dragAmount ->
+                            dragAccumulator += dragAmount
+                            if (dragAccumulator <= -14f) {
+                                dragAccumulator = 0f
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onMinutesChange(minutes + 1)
+                            } else if (dragAccumulator >= 14f) {
+                                dragAccumulator = 0f
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                onMinutesChange(minutes - 1)
+                            }
+                        }
+                    )
                 }
                 .padding(vertical = 12.dp, horizontal = 10.dp)
         ) {
@@ -327,7 +343,7 @@ private fun VerticalTickRuler(
                 for (i in 0 until ticks) {
                     val y = i * step + step / 2f
                     val isActive = i == activeIdx
-                    val lineW = if (isActive) size.width * 0.75f else size.width * 0.45f
+                    val lineW = if (isActive) size.width * 0.78f else size.width * 0.42f
                     drawRoundRect(
                         color = if (isActive) NothingRed else CreamDim.copy(alpha = 0.4f),
                         topLeft = Offset((size.width - lineW) / 2f, y - 1.5f),

@@ -123,7 +123,27 @@ class MusicViewModel : ViewModel() {
 
     fun seekTo(fraction: Float) {
         val dur = _uiState.value.durationMs
-        if (dur > 0) controller?.seekTo((dur * fraction).toLong())
+        if (dur > 0) {
+            val pos = (dur * fraction).toLong()
+            val ext = activeExternalController()
+            if (ext != null) {
+                ext.transportControls.seekTo(pos)
+            } else {
+                controller?.seekTo(pos)
+            }
+        }
+    }
+
+    fun openInstalledMusicApp(context: Context) {
+        val intent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+            addCategory(android.content.Intent.CATEGORY_APP_MUSIC)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            // No default music app handler found
+        }
     }
 
     fun toggleShuffle() {

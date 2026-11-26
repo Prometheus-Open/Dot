@@ -2,6 +2,7 @@ package com.amoled.clockmusic.ui.screens
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ fun ClockScreen(
     modifier: Modifier = Modifier
 ) {
     var now by remember { mutableStateOf(LocalDateTime.now()) }
+    var use24Hour by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -32,16 +34,20 @@ fun ClockScreen(
         }
     }
 
-    val hhmm   = now.format(DateTimeFormatter.ofPattern("HH:mm"))
+    // Subtle AMOLED burn-in protection: shifts clock 0..2dp every minute
+    val burnInShiftX = ((now.minute % 3) - 1).dp
+    val burnInShiftY = (((now.minute / 3) % 3) - 1).dp
+
+    val hhmm   = now.format(DateTimeFormatter.ofPattern(if (use24Hour) "HH:mm" else "hh:mm"))
     val ss     = now.format(DateTimeFormatter.ofPattern("ss"))
     val date   = now.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault()))
-    val amPm   = now.format(DateTimeFormatter.ofPattern("a"))
+    val amPm   = if (use24Hour) "24H" else now.format(DateTimeFormatter.ofPattern("a"))
     val second = now.second
 
     if (isTablet) {
-        ClockTabletLayout(hhmm, ss, date, amPm, second, modifier)
+        ClockTabletLayout(hhmm, ss, date, amPm, second, burnInShiftX, burnInShiftY, { use24Hour = !use24Hour }, modifier)
     } else {
-        ClockPhoneLayout(hhmm, ss, date, amPm, second, modifier)
+        ClockPhoneLayout(hhmm, ss, date, amPm, second, burnInShiftX, burnInShiftY, { use24Hour = !use24Hour }, modifier)
     }
 }
 
@@ -53,6 +59,9 @@ private fun ClockTabletLayout(
     date: String,
     amPm: String,
     second: Int,
+    shiftX: androidx.compose.ui.unit.Dp,
+    shiftY: androidx.compose.ui.unit.Dp,
+    onToggle24h: () -> Unit,
     modifier: Modifier
 ) {
     Row(
@@ -84,15 +93,17 @@ private fun ClockTabletLayout(
                         .aspectRatio(1f)
                 )
 
-                // NDot clock in the centre
+                // NDot clock in the centre (with subtle burn-in shift)
                 Column(
+                    modifier = Modifier.offset(x = shiftX, y = shiftY),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // AM/PM badge
+                    // 24H / AM/PM toggle badge
                     NothingBadge(
-                        text   = amPm,
-                        active = false
+                        text     = amPm,
+                        active   = false,
+                        modifier = Modifier.clickable { onToggle24h() }
                     )
                     Spacer(Modifier.height(16.dp))
 
@@ -204,6 +215,9 @@ private fun ClockPhoneLayout(
     date: String,
     amPm: String,
     second: Int,
+    shiftX: androidx.compose.ui.unit.Dp,
+    shiftY: androidx.compose.ui.unit.Dp,
+    onToggle24h: () -> Unit,
     modifier: Modifier
 ) {
     Column(
@@ -232,10 +246,11 @@ private fun ClockPhoneLayout(
                     modifier = Modifier.fillMaxWidth().aspectRatio(1f)
                 )
                 Column(
+                    modifier = Modifier.offset(x = shiftX, y = shiftY),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    NothingBadge(text = amPm, active = false)
+                    NothingBadge(text = amPm, active = false, modifier = Modifier.clickable { onToggle24h() })
                     Spacer(Modifier.height(10.dp))
                     NdotDigitText(
                         text     = hhmm,
