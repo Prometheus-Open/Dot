@@ -446,6 +446,20 @@ private fun SongList(
     onSongClick: (Song) -> Unit,
     modifier: Modifier
 ) {
+    if (songs.isEmpty()) {
+        Box(modifier = modifier, contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                NothingBadge(text = "NO LOCAL AUDIO FOUND", active = false)
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "Add audio files or grant media permission",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        return
+    }
     LazyColumn(
         modifier            = modifier,
         contentPadding      = PaddingValues(horizontal = 16.dp, vertical = 8.dp),

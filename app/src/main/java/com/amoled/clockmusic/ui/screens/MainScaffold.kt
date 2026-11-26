@@ -72,7 +72,7 @@ private fun TabletScaffold(
             targetState   = currentScreen,
             transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(200)) },
             label         = "screen",
-            modifier      = Modifier.fillMaxSize()
+            modifier      = Modifier.fillMaxSize().padding(end = 68.dp)
         ) { screen ->
             when (screen) {
                 AppScreen.CLOCK -> ClockScreen(isTablet = true)
