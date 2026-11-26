@@ -24,7 +24,7 @@ import com.amoled.clockmusic.media.MusicViewModel
 import com.amoled.clockmusic.ui.components.NothingBadge
 import com.amoled.clockmusic.ui.theme.*
 
-enum class AppScreen { CLOCK, MUSIC }
+enum class AppScreen { CLOCK, TIMER, MUSIC, STATS }
 
 @Composable
 fun MainScaffold(
@@ -62,7 +62,9 @@ private fun TabletScaffold(
         ) { screen ->
             when (screen) {
                 AppScreen.CLOCK -> ClockScreen(isTablet = true)
+                AppScreen.TIMER -> TimerScreen(isTablet = true)
                 AppScreen.MUSIC -> MusicScreen(musicViewModel, isTablet = true)
+                AppScreen.STATS -> StatsScreen(isTablet = true)
             }
         }
 
@@ -99,7 +101,9 @@ private fun PhoneScaffold(
             ) { screen ->
                 when (screen) {
                     AppScreen.CLOCK -> ClockScreen(isTablet = false)
+                    AppScreen.TIMER -> TimerScreen(isTablet = false)
                     AppScreen.MUSIC -> MusicScreen(musicViewModel, isTablet = false)
+                    AppScreen.STATS -> StatsScreen(isTablet = false)
                 }
             }
         }
@@ -135,18 +139,23 @@ private fun NothingNavPill(
             selected = currentScreen == AppScreen.CLOCK,
             onClick  = { onNavigate(AppScreen.CLOCK) }
         )
-        // Divider dot — Nothing-esque
-        Box(
-            modifier = Modifier
-                .size(4.dp)
-                .clip(RoundedCornerShape(2.dp))
-                .background(NothingRim)
+        NothingNavItem(
+            icon     = Icons.Rounded.Timer,
+            label    = "TIMER",
+            selected = currentScreen == AppScreen.TIMER,
+            onClick  = { onNavigate(AppScreen.TIMER) }
         )
         NothingNavItem(
             icon     = Icons.Rounded.LibraryMusic,
             label    = "MUSIC",
             selected = currentScreen == AppScreen.MUSIC,
             onClick  = { onNavigate(AppScreen.MUSIC) }
+        )
+        NothingNavItem(
+            icon     = Icons.Rounded.BarChart,
+            label    = "STATS",
+            selected = currentScreen == AppScreen.STATS,
+            onClick  = { onNavigate(AppScreen.STATS) }
         )
     }
 }
@@ -208,10 +217,22 @@ private fun NothingBottomBar(
                 onClick  = { onNavigate(AppScreen.CLOCK) }
             )
             NothingBottomItem(
+                icon     = Icons.Rounded.Timer,
+                label    = "TIMER",
+                selected = currentScreen == AppScreen.TIMER,
+                onClick  = { onNavigate(AppScreen.TIMER) }
+            )
+            NothingBottomItem(
                 icon     = Icons.Rounded.LibraryMusic,
                 label    = "MUSIC",
                 selected = currentScreen == AppScreen.MUSIC,
                 onClick  = { onNavigate(AppScreen.MUSIC) }
+            )
+            NothingBottomItem(
+                icon     = Icons.Rounded.BarChart,
+                label    = "STATS",
+                selected = currentScreen == AppScreen.STATS,
+                onClick  = { onNavigate(AppScreen.STATS) }
             )
         }
     }
