@@ -144,11 +144,33 @@ class MusicViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(repeatMode = next)
     }
 
-    // ── Progress tracker ─────────────────────────────────────────────────────
+    // ── Progress & external MediaSession tracker ─────────────────────────────
     private fun startProgressTracker() {
         viewModelScope.launch {
             while (true) {
                 delay(500L)
+                val ext = activeExternalController()
+                if (ext != null) {
+                    val meta = ext.metadata
+                    val pb = ext.playbackState
+                    val title = meta?.getString(android.media.MediaMetadata.METADATA_KEY_TITLE)
+                    val artist = meta?.getString(android.media.MediaMetadata.METADATA_KEY_ARTIST) ?: ""
+                    val album = meta?.getString(android.media.MediaMetadata.METADATA_KEY_ALBUM) ?: ""
+                    val dur = meta?.getLong(android.media.MediaMetadata.METADATA_KEY_DURATION) ?: 0L
+                    val pos = pb?.position ?: 0L
+                    val playing = pb?.state == android.media.session.PlaybackState.STATE_PLAYING
+                    val prog = if (dur > 0) (pos.toFloat() / dur).coerceIn(0f, 1f) else 0f
+                    if (title != null) {
+                        _uiState.value = _uiState.value.copy(
+                            currentSong = Song(-1L, title, artist, album, dur, android.net.Uri.EMPTY, null),
+                            isPlaying = playing,
+                            positionMs = pos,
+                            durationMs = dur,
+                            progress = prog
+                        )
+                    }
+                    continue
+                }
                 val ctrl = controller ?: continue
                 val pos  = ctrl.currentPosition
                 val dur  = ctrl.duration.coerceAtLeast(1L)
