@@ -13,10 +13,10 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.window.layout.WindowMetricsCalculator
 import com.amoled.clockmusic.media.MusicViewModel
 import com.amoled.clockmusic.ui.screens.MainScaffold
 import com.amoled.clockmusic.ui.theme.AppTheme
@@ -54,14 +54,8 @@ private fun AppRoot(
     val activity   = context as ComponentActivity
     val musicVm: MusicViewModel = viewModel()
 
-    // ── Detect tablet vs phone via window width ───────────────────────────────
-    val isTablet = remember {
-        val metrics = WindowMetricsCalculator.getOrCreate()
-            .computeCurrentWindowMetrics(activity)
-        val widthDp = metrics.bounds.width() /
-                (context.resources.displayMetrics.densityDpi / 160f)
-        widthDp >= 600f
-    }
+    // ── Detect tablet vs phone reactively ─────────────────────────────────────
+    val isTablet = LocalConfiguration.current.screenWidthDp >= 600
 
     // ── Permission request ────────────────────────────────────────────────────
     var hasPermission by remember {

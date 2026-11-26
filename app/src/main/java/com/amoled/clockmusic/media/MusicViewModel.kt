@@ -146,7 +146,7 @@ class MusicViewModel : ViewModel() {
 
     override fun onCleared() {
         controller?.removeListener(playerListener)
-        MediaController.releaseFuture(controllerFuture!!)
+        controllerFuture?.let { MediaController.releaseFuture(it) }
         super.onCleared()
     }
 }
